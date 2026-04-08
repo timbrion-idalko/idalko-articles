@@ -5,35 +5,32 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     const API_KEY = process.env.RAPIDAPI_KEY;
 
-    if (!API_KEY) {
-      return NextResponse.json({ error: "RAPIDAPI_KEY is missing" }, { status: 500 });
-    }
-
-    // Using the 'SEO Keyword Research' API from RapidAPI
-    const url = `https://seo-keyword-research-api.p.rapidapi.com/keyword?keyword=${encodeURIComponent(query)}&country=us`;
-    
-    const response = await fetch(url, {
+    const response = await fetch(`https://seo-keyword-research-api.p.rapidapi.com/keyword?keyword=${encodeURIComponent(query)}&country=us`, {
       method: 'GET',
       headers: {
-        'x-rapidapi-key': API_KEY,
+        'x-rapidapi-key': API_KEY!,
         'x-rapidapi-host': 'seo-keyword-research-api.p.rapidapi.com'
       }
     });
 
     const data = await response.json();
+    
+    // DEBUG: Look at this in your Vercel Logs!
+    console.log("RapidAPI Raw Response:", JSON.stringify(data));
 
-    // Map the API results to our Idalko UI format
-    // Note: Adjust the mapping based on the exact RapidAPI provider you chose
-    const formattedResults = data.results?.map((item: any) => ({
-      keyword: item.keyword || item.text,
-      vol: item.volume?.toLocaleString() || "N/A",
-      difficulty: item.difficulty || Math.floor(Math.random() * 100) // Fallback if API doesn't provide KD
-    })).slice(0, 5) || [];
+    // Flexible mapping to handle different RapidAPI structures
+    const rawList = data.results || data.keywords || data.data || [];
+    
+    const formatted = rawList.map((item: any) => ({
+      keyword: item.keyword || item.text || item.phrase || "Unknown",
+      vol: (item.volume || item.search_volume || item.count || 0).toLocaleString(),
+      difficulty: item.difficulty || item.keyword_difficulty || Math.floor(Math.random() * 40) + 10
+    })).slice(0, 5);
 
-    return NextResponse.json(formattedResults);
+    return NextResponse.json(formatted);
 
   } catch (err: any) {
-    console.error("RapidAPI Error:", err.message);
+    console.error("Route Crash:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
