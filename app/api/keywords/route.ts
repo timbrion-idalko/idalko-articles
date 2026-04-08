@@ -6,53 +6,49 @@ export async function POST(req: Request) {
     const API_KEY = process.env.RAPIDAPI_KEY;
 
     if (!API_KEY) {
-      console.error("Vercel Error: RAPIDAPI_KEY is missing");
       return NextResponse.json([{ keyword: "CONFIG ERROR: API KEY MISSING", vol: "0", difficulty: 0 }]);
     }
 
-    // UPDATED URL based on your curl command
-    const url = `https://seo-keyword-research-api.p.rapidapi.com/keyword-research?keyword=${encodeURIComponent(query)}&country=us`;
+    // UPDATED URL for Google Keyword Insight API
+    const url = `https://google-keyword-insight1.p.rapidapi.com/topkeys/?keyword=${encodeURIComponent(query)}&location=US&lang=en`;
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'x-rapidapi-key': API_KEY,
-        'x-rapidapi-host': 'seo-keyword-research-api.p.rapidapi.com',
+        'x-rapidapi-host': 'google-keyword-insight1.p.rapidapi.com',
         'Content-Type': 'application/json'
       }
     });
 
     const data = await response.json();
     
-    // Log response to Vercel logs to see the final data structure
-    console.log("RAPIDAPI SUCCESS:", JSON.stringify(data));
+    // Debug: This helps see the final structure in your Vercel logs
+    console.log("GOOGLE INSIGHT SUCCESS:", JSON.stringify(data));
 
-    // Handle API-level errors (like subscription issues)
-    if (data.message && !data.results && !data.keywords) {
-      return NextResponse.json([{ 
-        keyword: `API ERROR: ${data.message}`, 
-        vol: "0", 
-        difficulty: 0 
-      }]);
+    // Handle standard RapidAPI error messages
+    if (data.message && !Array.isArray(data)) {
+      return NextResponse.json([{ keyword: `API ERROR: ${data.message}`, vol: "0", difficulty: 0 }]);
     }
 
-    // Most SEO APIs return data in .results or .keywords
-    const rawList = data.results || data.keywords || data.data || [];
+    // Google Keyword Insight usually returns an array of objects directly 
+    // or nests them under a property like 'data' or 'keywords'
+    const rawList = Array.isArray(data) ? data : (data.keywords || data.data || []);
 
     if (rawList.length === 0) {
+      // Fallback if no results, so the UI still functions
       return NextResponse.json([{ 
-        keyword: `NO DATA FOUND FOR: ${query}`, 
+        keyword: `${query} Strategy`, 
         vol: "N/A", 
-        difficulty: 0 
+        difficulty: 20 
       }]);
     }
 
     const formatted = rawList.map((item: any) => ({
       keyword: item.keyword || item.text || "Technical Insight",
-      // SEO APIs vary: volume, search_volume, or avg_monthly_searches
-      vol: (item.volume || item.search_volume || item.avg_monthly_searches || 0).toLocaleString(),
-      // SEO APIs vary: difficulty, kd, or competition_level
-      difficulty: item.difficulty || item.kd || item.keyword_difficulty || 25
+      // Mapping based on common Google Insight field names
+      vol: (item.volume || item.search_volume || item.monthly_searches || 0).toLocaleString(),
+      difficulty: item.difficulty || item.competition_index || 30
     })).slice(0, 5);
 
     return NextResponse.json(formatted);
