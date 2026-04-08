@@ -24,27 +24,31 @@ export default function Home() {
     }, 800);
   };
 
-  // The actual API call to your Gemini-powered Route
-  const generateArticle = async (topic: string) => {
+ const generateArticle = async (topic: string) => {
     setLoading(true);
-    setArticle(""); // Clear current screen
+    setArticle(""); // Clear the screen so you know it's working
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic }),
       });
+
+      // Check if the server actually responded correctly
+      if (!res.ok) {
+        throw new Error(`Server responded with ${res.status}`);
+      }
       
       const data = await res.json();
       
       if (data.content) {
-        setArticle(data.content);
+        setArticle(data.content); // This should be the real Gemini text
       } else {
-        setArticle("ERROR: Failed to retrieve content from Gemini. Check Vercel logs.");
+        setArticle("ERROR: Gemini returned an empty response. Check Vercel API logs.");
       }
     } catch (error) {
       console.error("Gemini call failed:", error);
-      setArticle("Network error: Could not reach the API route.");
+      setArticle("CONNECTION ERROR: Failed to reach Gemini. Ensure your API key is in Vercel.");
     } finally {
       setLoading(false);
     }
