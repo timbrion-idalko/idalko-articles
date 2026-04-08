@@ -97,24 +97,22 @@ export default function Home() {
 
         {/* Right Column: Keyword Results or Article Viewer */}
         <div className="col-span-2">
-          {!article ? (
-            <div className="space-y-6">
-              {results.length > 0 ? (
-                results.map((item, i) => (
-                  <KeywordCard 
-                    key={i} 
-                    data={item} 
-                    onSelect={generateArticle} 
-                  />
-                ))
-              ) : (
-                <div className="border-2 border-dashed border-gray-700 p-20 text-center">
-                  <p className="text-gray-500 font-bold uppercase tracking-widest">
-                    No Data Analyzed. Enter a topic to begin.
-                  </p>
-                </div>
-              )}
-            </div>
+  {loading ? (
+    <div className="p-20 text-center animate-pulse text-idalko-orange font-black italic text-2xl">
+      SCANNING INTELLIGENCE...
+    </div>
+  ) : results.length > 0 ? (
+    results.map((item, i) => (
+      <KeywordCard key={i} data={item} onSelect={generateArticle} />
+    ))
+  ) : (
+    <div className="border-2 border-dashed border-gray-700 p-20 text-center">
+      <p className="text-gray-500 font-bold uppercase tracking-widest">
+        No Data Found. Try a broader topic like "Jira" or "Agile".
+      </p>
+    </div>
+  )}
+</div>
           ) : (
             <div className="bg-idalko-paper p-10 text-idalko-navy shadow-[12px_12px_0px_0px_#FF5C35] animate-in fade-in slide-in-from-bottom-4 duration-500">
               <button 
