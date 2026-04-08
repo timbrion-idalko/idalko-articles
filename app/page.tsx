@@ -6,6 +6,8 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [article, setArticle] = useState("");
+  // ADD THIS LINE TO FIX THE ERROR:
+  const [loading, setLoading] = useState(false); 
 
   const mockSearch = () => {
     setResults([
@@ -15,21 +17,24 @@ export default function Home() {
     ]);
   };
 
-const generateArticle = async (topic: string) => {
-  setLoading(true); // Ensure you have a 'loading' state
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      body: JSON.stringify({ topic }),
-    });
-    const data = await res.json();
-    setArticle(data.content);
-  } catch (error) {
-    console.error("Failed to generate article", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  const generateArticle = async (topic: string) => {
+    setLoading(true); // Now TypeScript can find this!
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic }),
+      });
+      const data = await res.json();
+      setArticle(data.content);
+    } catch (error) {
+      console.error("Generation failed", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // ... rest of your return() code
 
   return (
     <main className="min-h-screen p-8 max-w-6xl mx-auto bg-idalko-navy">
