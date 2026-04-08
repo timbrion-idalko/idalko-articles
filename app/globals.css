@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-idalko-navy: #0A0F28;
+  --color-idalko-orange: #FF5C35;
+  --color-idalko-paper: #FAF9F6;
+}
+
+:root {
+  background-color: #0A0F28;
+  color: white;
+}
+
+/* iDAALKO outlined text effect */
+.text-outline {
+  -webkit-text-stroke: 1.5px #FF5C35;
+  color: transparent;
+}
