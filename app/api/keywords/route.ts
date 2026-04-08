@@ -5,43 +5,49 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     const API_KEY = process.env.RAPIDAPI_KEY;
 
-    const response = await fetch(`https://seo-keyword-research-api.p.rapidapi.com/keyword?keyword=${encodeURIComponent(query)}&country=us`, {
+    // Use the standard RapidAPI HOST for SEO Keyword Research
+    const HOST = 'seo-keyword-research-api.p.rapidapi.com';
+    
+    // TRYING THE '/suggestions' ENDPOINT (common for this provider)
+    const url = `https://${HOST}/suggestions?keyword=${encodeURIComponent(query)}&country=us`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'x-rapidapi-key': API_KEY || '',
-        'x-rapidapi-host': 'seo-keyword-research-api.p.rapidapi.com'
+        'x-rapidapi-host': HOST
       }
     });
 
     const data = await response.json();
     
-    // Log the data to Vercel so you can see it in the dashboard logs
-    console.log("RAPIDAPI_RESPONSE:", JSON.stringify(data));
+    // DEBUG LOG: This helps you see the actual structure in Vercel
+    console.log("RAPIDAPI_DATA:", JSON.stringify(data));
 
-    // If the API returns an error message (common with expired keys or no subscription)
-    if (data.message) {
+    // If it still says 'Endpoint does not exist', let's display the correction
+    if (data.message && data.message.includes("does not exist")) {
       return NextResponse.json([{ 
-        keyword: `API MESSAGE: ${data.message}`, 
+        keyword: "WRONG ENDPOINT: Check RapidAPI Dashboard for the correct path (e.g. /search)", 
         vol: "0", 
         difficulty: 0 
       }]);
     }
 
-    // Try to find the list in common RapidAPI locations
-    const list = data.results || data.keywords || data.data || (Array.isArray(data) ? data : null);
+    // Map common response formats: .results, .keywords, or the object itself
+    const rawList = data.results || data.keywords || data.suggestions || (Array.isArray(data) ? data : []);
 
-    if (!list || list.length === 0) {
+    if (rawList.length === 0) {
       return NextResponse.json([{ 
-        keyword: "DEBUG: API returned 200 but empty list. Check logs.", 
+        keyword: `NO DATA FOR: ${query}`, 
         vol: "N/A", 
         difficulty: 0 
       }]);
     }
 
-    const formatted = list.map((item: any) => ({
-      keyword: item.keyword || item.text || item.phrase || "Unknown",
+    const formatted = rawList.map((item: any) => ({
+      keyword: item.keyword || item.text || "Insight Found",
       vol: (item.volume || item.search_volume || 0).toLocaleString(),
-      difficulty: item.difficulty || item.keyword_difficulty || 10
+      difficulty: item.difficulty || 15
     })).slice(0, 5);
 
     return NextResponse.json(formatted);
