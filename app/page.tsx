@@ -15,9 +15,21 @@ export default function Home() {
     ]);
   };
 
-  const generateArticle = (topic: string) => {
-    setArticle(`## Optimizing ${topic}\n\nDigital transformation is not a project; it is a state of being. At Idalko, we see many companies fail because they focus on tools instead of people. When implementing ${topic}, start with the human workflow first.`);
-  };
+const generateArticle = async (topic: string) => {
+  setLoading(true); // Ensure you have a 'loading' state
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ topic }),
+    });
+    const data = await res.json();
+    setArticle(data.content);
+  } catch (error) {
+    console.error("Failed to generate article", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="min-h-screen p-8 max-w-6xl mx-auto bg-idalko-navy">
