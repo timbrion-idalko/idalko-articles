@@ -9,11 +9,10 @@ export default function Home() {
   const [article, setArticle] = useState("");
   const [loading, setLoading] = useState(false);
 
- 
   const analyzeKeywords = async () => {
     if (!query) return;
     setLoading(true);
-    setResults([]); // Clear old results
+    setResults([]); 
     
     try {
       const res = await fetch('/api/keywords', {
@@ -28,15 +27,14 @@ export default function Home() {
       setResults(data);
     } catch (error) {
       console.error("Keyword API call failed:", error);
-      // Optional: Add a small error notification here
     } finally {
       setLoading(false);
     }
   };
 
- const generateArticle = async (topic: string) => {
+  const generateArticle = async (topic: string) => {
     setLoading(true);
-    setArticle(""); // Clear the screen so you know it's working
+    setArticle(""); 
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -44,7 +42,6 @@ export default function Home() {
         body: JSON.stringify({ topic }),
       });
 
-      // Check if the server actually responded correctly
       if (!res.ok) {
         throw new Error(`Server responded with ${res.status}`);
       }
@@ -52,22 +49,22 @@ export default function Home() {
       const data = await res.json();
       
       if (data.content) {
-        setArticle(data.content); // This should be the real Gemini text
+        setArticle(data.content);
       } else {
-        setArticle("ERROR: Gemini returned an empty response. Check Vercel API logs.");
+        setArticle("ERROR: Gemini returned an empty response.");
       }
     } catch (error) {
       console.error("Gemini call failed:", error);
-      setArticle("CONNECTION ERROR: Failed to reach Gemini. Ensure your API key is in Vercel.");
+      setArticle("CONNECTION ERROR: Failed to reach Gemini.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen p-8 max-w-6xl mx-auto bg-idalko-navy">
+    <main className="min-h-screen p-8 max-w-6xl mx-auto bg-idalko-navy text-white">
       <header className="mb-16">
-        <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none text-white">
+        <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
           CONTENT <span className="text-outline">ENGINE</span>
         </h1>
         <p className="text-idalko-orange font-bold tracking-[0.3em] mt-2 uppercase">
@@ -75,7 +72,7 @@ export default function Home() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Search Input */}
         <div className="col-span-1">
           <div className="bg-idalko-orange p-1 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.1)]">
@@ -97,23 +94,24 @@ export default function Home() {
 
         {/* Right Column: Keyword Results or Article Viewer */}
         <div className="col-span-2">
-  {loading ? (
-    <div className="p-20 text-center animate-pulse text-idalko-orange font-black italic text-2xl">
-      SCANNING INTELLIGENCE...
-    </div>
-  ) : results.length > 0 ? (
-    results.map((item, i) => (
-      <KeywordCard key={i} data={item} onSelect={generateArticle} />
-    ))
-  ) : (
-    <div className="border-2 border-dashed border-gray-700 p-20 text-center">
-      <p className="text-gray-500 font-bold uppercase tracking-widest">
-        No Data Found. Try a broader topic like "Jira" or "Agile".
-      </p>
-    </div>
-  )}
-</div>
+          {loading && results.length === 0 ? (
+            <div className="p-20 text-center animate-pulse text-idalko-orange font-black italic text-2xl">
+              SCANNING INTELLIGENCE...
+            </div>
+          ) : !article ? (
+            <div className="space-y-6">
+              {results.length > 0 ? (
+                results.map((item, i) => (
+                  <KeywordCard key={i} data={item} onSelect={generateArticle} />
+                ))
+              ) : (
+                <div className="border-2 border-dashed border-gray-700 p-20 text-center text-gray-500 font-bold uppercase tracking-widest">
+                  No Data Found. Enter a topic to begin.
+                </div>
+              )}
+            </div>
           ) : (
+            /* Article View */
             <div className="bg-idalko-paper p-10 text-idalko-navy shadow-[12px_12px_0px_0px_#FF5C35] animate-in fade-in slide-in-from-bottom-4 duration-500">
               <button 
                 onClick={() => setArticle("")} 
@@ -141,11 +139,11 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Universal Loading Overlay */}
-      {loading && !results.length && (
+      {/* Universal Loading Overlay for when generating article */}
+      {loading && article === "" && results.length > 0 && (
         <div className="fixed inset-0 bg-idalko-navy/80 backdrop-blur-sm flex items-center justify-center z-50">
           <p className="text-idalko-orange font-black text-4xl animate-pulse uppercase italic">
-            Processing Intelligence...
+            Generating Article...
           </p>
         </div>
       )}
