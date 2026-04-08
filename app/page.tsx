@@ -10,18 +10,28 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   // Function to simulate the SEMRush keyword scan
-  const analyzeKeywords = () => {
+  const analyzeKeywords = async () => {
+    if (!query) return;
     setLoading(true);
-    // Mimicking the industry keyword data logic
-    setTimeout(() => {
-      setResults([
-        { keyword: "Atlassian AI Best Practices", vol: "18,200", difficulty: 22 },
-        { keyword: "JSM Workflow Efficiency", vol: "5,400", difficulty: 12 },
-        { keyword: "Jira Cloud Migration Risks", vol: "42,000", difficulty: 85 },
-        { keyword: "Digital Transformation in ITSM", vol: "12,400", difficulty: 45 }
-      ]);
+    setResults([]); // Clear old results
+    
+    try {
+      const res = await fetch('/api/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!res.ok) throw new Error("Keyword scan failed");
+      
+      const data = await res.json();
+      setResults(data);
+    } catch (error) {
+      console.error("Keyword API call failed:", error);
+      // Optional: Add a small error notification here
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
  const generateArticle = async (topic: string) => {
