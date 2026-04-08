@@ -9,7 +9,7 @@ export default function Home() {
   const [article, setArticle] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Function to simulate the SEMRush keyword scan
+ 
   const analyzeKeywords = async () => {
     if (!query) return;
     setLoading(true);
